@@ -16,28 +16,32 @@ class _MapPageState extends State<MapPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _welcomeText('Moises'),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: InteractiveViewer(
-                    constrained: false,
-                    child: SizedBox(
-                      height: 1500,
-                      child: Image.asset(
-                        'assets/unimap.png',
-                        fit: BoxFit.cover,
-                        ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _mapVisualizer(),
           ],
         ),
       ),
     );
+  }
+
+  Expanded _mapVisualizer() {
+    return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: InteractiveViewer(
+                  constrained: false,
+                  child: SizedBox(
+                    height: 1500,
+                    child: Image.asset(
+                      'assets/unimap.png',
+                      fit: BoxFit.cover,
+                      ),
+                  ),
+                ),
+              ),
+            ),
+          );
   }
 }
 
