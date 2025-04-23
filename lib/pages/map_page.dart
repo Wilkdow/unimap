@@ -74,22 +74,6 @@ class _MapPageState extends State<MapPage> {
                     height: 1500,
                     child: Image.asset('assets/unimap.png', fit: BoxFit.cover),
                   ),
-                  Positioned(
-                      left: 0,
-                      top: 0,
-                      child: Icon(Icons.location_on, color: Colors.red),
-                    ),
-                  Positioned(
-                    left: 1382.7,
-                    top: 629.1,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                      ),
-                    ),
-                  ),
                     //Add markers and stuff
                   ...defaultMarkers.map(
                     (offSet) => Positioned(
