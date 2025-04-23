@@ -1,8 +1,8 @@
 class Node {
   final String id;
   final String building;
-  final int x;
-  final int y;
+  final double x;
+  final double y;
   final int floor;
   final List neighbors;
 
@@ -14,7 +14,7 @@ class Node {
     required this.neighbors,
   }) : id = '${building}_$floor';
 
-  (int, int) getPos() {
+  (double, double) getPos() {
     return (x, y);
   }
 
