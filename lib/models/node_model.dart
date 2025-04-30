@@ -7,12 +7,11 @@ class Node {
   final List neighbors;
 
   Node({
-    required this.building,
+    required this.id,
     required this.x, 
     required this.y,
-    required this.floor,
     required this.neighbors,
-  }) : id = '${building}_$floor';
+  }) : building = id.split('_')[0], floor = int.parse(id.split('_')[1]);
 
   (double, double) getPos() {
     return (x, y);

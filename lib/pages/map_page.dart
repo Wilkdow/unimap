@@ -12,8 +12,17 @@ class _MapPageState extends State<MapPage> {
       TransformationController();
   final List defaultMarkers = [];
 
+  @override
+  //Set the initial pos to somewhere on the image
+  void initState() {
+    super.initState();
+    _transformationController.value = Matrix4.identity()
+    ..setTranslationRaw(-1300, -600, 0);
+  }
+
   void _handleTap(BuildContext context, TapUpDetails details) {
     //Convert global tap position to local within the InteractiveViewer
+    final offset = Offset(33.5, 155);
     final renderBox = context.findRenderObject() as RenderBox;
     final localPosition = renderBox.globalToLocal(details.globalPosition);
 
@@ -25,7 +34,7 @@ class _MapPageState extends State<MapPage> {
     );
 
     setState(() {
-      defaultMarkers.add(transformedPos - Offset(33.5, 155));
+      defaultMarkers.add(transformedPos - offset);
     });
   }
 

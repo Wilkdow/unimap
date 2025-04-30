@@ -33,6 +33,7 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  csv: ^6.0.0
   cupertino_icons: ^1.0.8
   collection: ^1.19.1
 
@@ -60,7 +61,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-   - assets/unimap.png
+   - assets/Map/unimap.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
