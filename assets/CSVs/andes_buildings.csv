@@ -1,0 +1,8 @@
+name,x,y,neighbors,type,min_floor,max_floor,conection floor
+AU,1,1,RGD,bridge,1,4,3
+RGD,3,1,AU_LL_W_B_C,bridge_ramp_ramp_ramp_ramp,-2,7,3_1_1_1
+ML,3,5,W,ramp,-2,6,5
+W,4,5,ML_RGD_LL_C_B,ramp_ramp_ramp_ramp_ramp,1,6,5_1_1_1_1
+LL,4,4,W_B_C_RGD,ramp_ramp_ramp_ramp,-2,4,1_1_1_1
+C,6,5,B_LL_W,ramp_ramp_ramp,1,7,1_1_1
+B,6,3,C_LL_W,ramp_ramp_ramp,1,5,1_1_1
