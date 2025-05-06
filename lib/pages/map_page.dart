@@ -83,7 +83,7 @@ class _MapPageState extends State<MapPage> {
             children: [
               SizedBox(
                 height: 1500,
-                child: Image.asset('assets/unimap.png', fit: BoxFit.cover),
+                child: Image.asset('assets/map/unimap.png', fit: BoxFit.cover),
               ),
               //Add markers and stuff
               ...defaultMarkers.map(
