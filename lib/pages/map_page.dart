@@ -12,7 +12,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final String csvPath = "assets/CSVs/andes_buildings.csv";
-  final String mapPngPath = 'assets/map/unimap.png';
+  final String mapPngPath = 'assets/Map/unimap.png';
 
   final TransformationController _transformationController =
       TransformationController();
