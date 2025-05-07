@@ -1,8 +1,8 @@
-name,x,y,z,neighB_5ors,type
-AU_1,1,1,1,RGD_1,bridge
-RGD_1,3,1,2,AU_1 LL_1 W_3 B_5 C_4,bridge ramp ramp ramp ramp
-ML_4,3,5,3,W_3,ramp
-W_3,4,5,4,ML_4 RGD_1 LL_1 C_4 B_5,ramp ramp ramp ramp ramp
-LL_1,4,4,5,W_3 B_5 C_4 RGD_1,ramp ramp ramp ramp
-C_4,6,5,2,B_5 LL_1 W_3,ramp ramp ramp
-B_5,6,3,1,C_4 LL_1 W_3,ramp ramp ramp
+name,x,y,z,neighbors,type
+AU_1,1177.8,827.8,1,RGD_1,bridge
+RGD_1,1245.1,834,2,AU_1 LL_1 W_3 B_5 C_4,bridge ramp ramp ramp ramp
+ML_4,1388.4,640.5,3,W_3,ramp
+W_3,1425.1,778.4,4,ML_4 RGD_1 LL_1 C_4 B_5,ramp ramp ramp ramp ramp
+LL_1,1404,842.4,5,W_3 B_5 C_4 RGD_1,ramp ramp ramp ramp
+C_4,1490.2,942.4,2,B_5 LL_1 W_3,ramp ramp ramp
+B_5,1388,961.3,1,C_4 LL_1 W_3,ramp ramp ramp

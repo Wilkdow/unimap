@@ -9,8 +9,8 @@ double h(p1, p2) {
   return sqrt( pow(x1 - x2, 2) + pow(y1 - y2, 2) + pow(z1 - z1, 2) );
 }
 
-List reconstructPath(Map cameFrom, current) {
-  List path = [];
+List<Node> reconstructPath(Map cameFrom, current) {
+  List<Node> path = [];
   while (cameFrom.containsKey(current)) {
     path.add(current);
     current = cameFrom[current];
@@ -19,17 +19,17 @@ List reconstructPath(Map cameFrom, current) {
   return path.reversed.toList();
 }
 
-List algorithm(graph, start, end) {
-  List path = [];
+List<Node> algorithm(Map graph, start, end) {
+  List<Node> path = [];
   final pq = PriorityQueue<(double, Node)>((a, b) => a.$1.compareTo(b.$1));
   pq.add((0, start));
   Map cameFrom = {};
   Map gScore = {
-    for (var node in graph) node.id: double.infinity
+    for (var node in graph.values) node.id: double.infinity
   };
   gScore[start.id] = 0;
   Map fScore = {
-    for (var node in graph) node.id: double.infinity
+    for (var node in graph.values) node.id: double.infinity
   };
   fScore[start.id] = h(start.getPos(), end.getPos());
   List pqRecord = [start];

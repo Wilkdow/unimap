@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:unimap/models/node_model.dart';
+import 'package:unimap/services/load_graph.dart' as load;
 import 'package:unimap/services/astar_pathfinding.dart' as astar;
 
 class MapPage extends StatefulWidget {
@@ -9,18 +11,42 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  final String csvPath = "assets/CSVs/andes_buildings.csv";
+  final String mapPngPath = 'assets/map/unimap.png';
+
   final TransformationController _transformationController =
       TransformationController();
-  final List<Offset> defaultMarkers = [];
+  final List<Offset> markers = [];
   final offsetIcon = Offset(14, 27);
+
+  late Map graph;
+  late List<Node> shortestPath;
 
   @override
   void initState() {
     super.initState();
 
-  //Set the initial pos to somewhere on the image
+    _loadGraph(csvPath);
+    //Set the initial pos to somewhere on the image
     _transformationController.value =
         Matrix4.identity()..setTranslationRaw(-1200, -430, 0); //"center" map
+  }
+
+  Future<void> _loadGraph(String path) async {
+    graph = load.loadData(await load.readCsvAsync(path));
+    setState(() {});
+  }
+
+  void _calculateShortestPath(Map graph, Node start, Node end) {
+    shortestPath = astar.algorithm(graph, start, end);
+    setState(() {});
+  }
+
+  void _setMarkers(List<Node> path) {
+    for (var node in path) {
+      markers.add(node.getOffset());
+    }
+    setState(() {});
   }
 
   void _handleTap(BuildContext context, TapUpDetails details) {
@@ -36,14 +62,14 @@ class _MapPageState extends State<MapPage> {
     );
 
     setState(() {
-      defaultMarkers.add(transformedPos);
+      markers.add(transformedPos);
     });
   }
 
-  void _resetMarkers() {
-    setState(() {
-      defaultMarkers.removeLast();
-    });
+  void _resetEverything() {
+    markers.clear();
+    shortestPath = [];
+    setState(() {});
   }
 
   @override
@@ -66,7 +92,13 @@ class _MapPageState extends State<MapPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _resetMarkers();
+          print(graph);
+          _calculateShortestPath(graph, graph['AU_1'], graph['ML_4']);
+          _setMarkers(shortestPath);
+          print('Path');
+          for (var node in shortestPath) {
+            print(node.id);
+          }
         },
       ),
     );
@@ -76,8 +108,8 @@ class _MapPageState extends State<MapPage> {
     return Expanded(
       child: GestureDetector(
         onTapUp: (details) {
-          _handleTap(context, details);
-          print(defaultMarkers);
+          // _handleTap(context, details);
+          _resetEverything();
         },
         child: InteractiveViewer(
           transformationController: _transformationController,
@@ -87,19 +119,29 @@ class _MapPageState extends State<MapPage> {
             children: [
               SizedBox(
                 height: 1500,
-                child: Image.asset('assets/map/unimap.png', fit: BoxFit.cover, ),
+                child: Image.asset(mapPngPath, fit: BoxFit.cover),
               ),
-              CustomPaint(
-              painter: LinePainter(waypoints: defaultMarkers),
-            ),
+              CustomPaint(painter: LinePainter(waypoints: markers)),
               //Add markers and stuff
-              ...defaultMarkers.map(
-                (offSet) => Positioned(
-                  left: offSet.dx - offsetIcon.dx,
-                  top: offSet.dy- offsetIcon.dy,
-                  child: Icon(Icons.location_on, color: Colors.red, size: 30),
-                ),
-              ),
+              ...markers
+                  .asMap()
+                  .entries
+                  .where(
+                    (entry) =>
+                        entry.key == 0 || entry.key == markers.length - 1,
+                  )
+                  .map((entry) {
+                    final offSet = entry.value;
+                    return Positioned(
+                      left: offSet.dx - offsetIcon.dx,
+                      top: offSet.dy - offsetIcon.dy,
+                      child: Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 30,
+                      ),
+                    );
+                  }),
             ],
           ),
         ),
@@ -115,15 +157,17 @@ class LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.red
-      ..strokeWidth = 4.0
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = Colors.red
+          ..strokeWidth = 4.0
+          ..style = PaintingStyle.stroke;
 
     for (int i = 0; i < waypoints.length - 1; i++) {
-      canvas.drawLine(waypoints[i], waypoints[i+1], paint);
+      canvas.drawLine(waypoints[i], waypoints[i + 1], paint);
     }
   }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true; //Redraw whenever markers change uwu

@@ -1,16 +1,19 @@
 import 'dart:io';
 
+import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
+
 import '../models/node_model.dart';
 import 'package:unimap/services/astar_pathfinding.dart' as astar;
 
-List<Node> loadData(List<String> csvData) {
+Map loadData(List<List<String>> csvData) {
   List<Node> nodes = [];
   Map nodesInfo = {};
   List neighbors = [];
   List types = [];
 
   for (int i = 1; i < csvData.length; i++) {
-    final data = csvData[i].split(',');
+    final data = csvData[i];
     Node node = Node(
       id: data[0],
       x: double.parse(data[1]),
@@ -32,23 +35,13 @@ List<Node> loadData(List<String> csvData) {
     }
   }
 
-  return nodes;
+  return nodesInfo;
 }
 
-List<String> readCsvSync(String path) {
-  final file = File(path);
-  if (!file.existsSync()) {
-    return [];
-  }
-
-  return file.readAsLinesSync();
-}
-
-void main(List<String> args) {
-  var nodes = loadData(readCsvSync("assets/CSVs/andes_buildings.csv"));
-  var path = astar.algorithm(nodes, nodes[1], nodes[5]);
-  print('Path: ');
-  for (var x in path) {
-    print(x.id);
-  }
+Future<List<List<String>>> readCsvAsync(String path) async {
+  var rawData = await rootBundle.loadString(path);
+  print('Raw data: $rawData\n');
+  List<List<String>> csvList = CsvToListConverter(shouldParseNumbers: false).convert(rawData);
+  print('List data: $csvList\n');
+  return csvList;
 }

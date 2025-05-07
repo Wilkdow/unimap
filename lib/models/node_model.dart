@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Node {
   final String id;
   final String building;
@@ -20,6 +22,10 @@ class Node {
 
   (double, double, double) getPos() {
     return (x, y, z);
+  }
+
+  Offset getOffset() {
+    return Offset(x, y);
   }
 
   static T? _safeGet<T>(List<T> list, int index) {
