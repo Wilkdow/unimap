@@ -3,18 +3,30 @@ class Node {
   final String building;
   final double x;
   final double y;
-  final int floor;
-  final List neighbors;
+  final double z;
+  final int? floor;
+  final List<(Node, double, String)> neighbors;
+  final String? type;
 
   Node({
     required this.id,
-    required this.x, 
+    required this.x,
     required this.y,
+    required this.z,
     required this.neighbors,
-  }) : building = id.split('_')[0], floor = int.parse(id.split('_')[1]);
+  }) : building = id.split('_')[0],
+       floor = int.tryParse(_safeGet(id.split('_'), 1) ?? ''),
+       type = _safeGet(id.split('_'), 2);
 
-  (double, double) getPos() {
-    return (x, y);
+  (double, double, double) getPos() {
+    return (x, y, z);
+  }
+
+  static T? _safeGet<T>(List<T> list, int index) {
+    if (index >= 0 && index < list.length) {
+      return list[index];
+    }
+    return null;
   }
 
   void addNeighbor(neighbor, cost, type) {
