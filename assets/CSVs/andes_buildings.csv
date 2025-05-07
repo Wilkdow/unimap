@@ -1,0 +1,8 @@
+name,x,y,z,neighB_5ors,type
+AU_1,1,1,1,RGD_1,bridge
+RGD_1,3,1,2,AU_1 LL_1 W_3 B_5 C_4,bridge ramp ramp ramp ramp
+ML_4,3,5,3,W_3,ramp
+W_3,4,5,4,ML_4 RGD_1 LL_1 C_4 B_5,ramp ramp ramp ramp ramp
+LL_1,4,4,5,W_3 B_5 C_4 RGD_1,ramp ramp ramp ramp
+C_4,6,5,2,B_5 LL_1 W_3,ramp ramp ramp
+B_5,6,3,1,C_4 LL_1 W_3,ramp ramp ramp
