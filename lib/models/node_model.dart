@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 class Node {
   final String id;
   final String building;
+  final String? type;
   final double x;
   final double y;
   final double z;
   final int? floor;
+  final bool showOnSearch;
   final List<(Node, double, String)> neighbors;
-  final String? type;
 
   Node({
     required this.id,
     required this.x,
     required this.y,
     required this.z,
+    required this.showOnSearch,
     required this.neighbors,
   }) : building = id.split('_')[0],
        floor = int.tryParse(_safeGet(id.split('_'), 1) ?? ''),

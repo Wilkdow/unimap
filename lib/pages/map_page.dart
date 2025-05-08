@@ -16,16 +16,20 @@ class _MapPageState extends State<MapPage> {
 
   final TransformationController _transformationController =
       TransformationController();
-  final List<Offset> markers = [];
-  final offsetIcon = Offset(14, 27);
 
-  late Map graph;
+  final List<Offset> markers = [];
+  final List<Offset> pathLineCoords = [];
+  final offsetIcon = Offset(14, 27);
+  final List<String> suggestions = [];
+
+  Map<String, Node> graph = {};
   late List<Node> shortestPath;
+  Node? start;
+  Node? end;
 
   @override
   void initState() {
     super.initState();
-
     _loadGraph(csvPath);
     //Set the initial pos to somewhere on the image
     _transformationController.value =
@@ -34,6 +38,16 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _loadGraph(String path) async {
     graph = load.loadData(await load.readCsvAsync(path));
+    _loadSuggestions(graph);
+    setState(() {});
+  }
+
+  void _loadSuggestions(Map<String, Node> graph) {
+    for (Node node in graph.values) {
+      if (node.showOnSearch) {
+        suggestions.add(node.id);
+      }
+    }
     setState(() {});
   }
 
@@ -42,9 +56,13 @@ class _MapPageState extends State<MapPage> {
     setState(() {});
   }
 
-  void _setMarkers(List<Node> path) {
+  void _setMarkers(Node start, Node end) {
+    markers.addAll([start.getOffset(), end.getOffset()]);
+  }
+
+  void _setPathLinesCoords(List<Node> path) {
     for (var node in path) {
-      markers.add(node.getOffset());
+      pathLineCoords.add(node.getOffset());
     }
     setState(() {});
   }
@@ -62,46 +80,108 @@ class _MapPageState extends State<MapPage> {
     );
 
     setState(() {
-      markers.add(transformedPos);
+      pathLineCoords.add(transformedPos);
     });
+  }
+
+  void _handleAlgortihm() {
+    print(start);
+    print(end);
+    print(graph);
+    _calculateShortestPath(graph, start!, end!);
+    _setPathLinesCoords(shortestPath);
+    print('Path');
+    for (var node in shortestPath) {
+      print(node.id);
+    }
   }
 
   void _resetEverything() {
     markers.clear();
-    shortestPath = [];
+    pathLineCoords.clear();
+    shortestPath.clear();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          _mapVisualizer(),
-          Padding(
-            padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
-            child: Container(
-              height: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                color: Colors.amber,
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: Stack(children: [_mapVisualizer(), _searchField()]),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print(graph);
-          _calculateShortestPath(graph, graph['AU_1'], graph['ML_4']);
-          _setMarkers(shortestPath);
-          print('Path');
-          for (var node in shortestPath) {
-            print(node.id);
-          }
+          _handleAlgortihm();
         },
       ),
     );
+  }
+
+  Padding _searchField() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+      child: Column(
+        children: [
+          _autocompleteField(true),
+          _autocompleteField(false),
+        ],
+      ),
+    );
+  }
+
+  Autocomplete<String> _autocompleteField(bool isOrigin) {
+    return Autocomplete<String>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable.empty();
+            }
+            return suggestions.where((String option) {
+              return option.toLowerCase().contains(
+                textEditingValue.text.toLowerCase(),
+              );
+            });
+          },
+          onSelected: (option) {
+            setState(() {
+              isOrigin ? start = graph[option] :  end = graph[option];
+            });
+          },
+          fieldViewBuilder: (
+            context,
+            textEditingController,
+            focusNode,
+            onFieldSubmitted,
+          ) {
+            return TextField(
+              controller: textEditingController,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: isOrigin ? 'Origen...' : 'Destino...',
+                prefixIcon: Icon(Icons.search_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: isOrigin ? Radius.circular(18) : Radius.zero,
+                    bottom: isOrigin ? Radius.zero : Radius.circular(18)
+                  ),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              onChanged: (value) {
+                _resetEverything();
+                if (suggestions.contains(value)) {
+                  setState(() {
+                    isOrigin ? start = graph[value] :  end = graph[value];
+                  });
+                }
+                else {
+                  setState(() {
+                    isOrigin ? start = null :  end = null;
+                  });
+                }
+              },
+            );
+          },
+        );
   }
 
   Expanded _mapVisualizer() {
@@ -121,27 +201,15 @@ class _MapPageState extends State<MapPage> {
                 height: 1500,
                 child: Image.asset(mapPngPath, fit: BoxFit.cover),
               ),
-              CustomPaint(painter: LinePainter(waypoints: markers)),
+              CustomPaint(painter: LinePainter(waypoints: pathLineCoords)),
               //Add markers and stuff
-              ...markers
-                  .asMap()
-                  .entries
-                  .where(
-                    (entry) =>
-                        entry.key == 0 || entry.key == markers.length - 1,
-                  )
-                  .map((entry) {
-                    final offSet = entry.value;
-                    return Positioned(
-                      left: offSet.dx - offsetIcon.dx,
-                      top: offSet.dy - offsetIcon.dy,
-                      child: Icon(
-                        Icons.location_on,
-                        color: Colors.red,
-                        size: 30,
-                      ),
-                    );
-                  }),
+              ...markers.map(
+                (offSet) => Positioned(
+                  left: offSet.dx - offsetIcon.dx,
+                  top: offSet.dy - offsetIcon.dy,
+                  child: Icon(Icons.location_on, color: Colors.red, size: 30),
+                ),
+              ),
             ],
           ),
         ),

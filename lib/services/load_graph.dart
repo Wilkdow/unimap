@@ -6,9 +6,9 @@ import 'package:flutter/services.dart';
 import '../models/node_model.dart';
 import 'package:unimap/services/astar_pathfinding.dart' as astar;
 
-Map loadData(List<List<String>> csvData) {
+Map<String, Node> loadData(List<List<String>> csvData) {
   List<Node> nodes = [];
-  Map nodesInfo = {};
+  Map<String, Node> nodesInfo = {};
   List neighbors = [];
   List types = [];
 
@@ -19,6 +19,7 @@ Map loadData(List<List<String>> csvData) {
       x: double.parse(data[1]),
       y: double.parse(data[2]),
       z: double.parse(data[3]),
+      showOnSearch: data[6].isNotEmpty,
       neighbors: [],
     );
 
@@ -30,7 +31,7 @@ Map loadData(List<List<String>> csvData) {
 
   for (int i = 0; i < nodes.length; i++) {
     for (int j = 0; j < neighbors[i].length; j++) {    
-        double cost = astar.h(nodes[i].getPos(), nodesInfo[neighbors[i][j]].getPos());
+        double cost = astar.h(nodes[i].getPos(), nodesInfo[neighbors[i][j]]?.getPos());
         nodes[i].addNeighbor(nodesInfo[neighbors[i][j]], cost, types[i][j]);
     }
   }
@@ -40,8 +41,6 @@ Map loadData(List<List<String>> csvData) {
 
 Future<List<List<String>>> readCsvAsync(String path) async {
   var rawData = await rootBundle.loadString(path);
-  print('Raw data: $rawData\n');
   List<List<String>> csvList = CsvToListConverter(shouldParseNumbers: false).convert(rawData);
-  print('List data: $csvList\n');
   return csvList;
 }
