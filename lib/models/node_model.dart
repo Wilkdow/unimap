@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Node {
   final String id;
   final String building;
-  final String? type;
+  final String type;
   final double x;
   final double y;
   final double z;
@@ -13,14 +13,14 @@ class Node {
 
   Node({
     required this.id,
+    required this.type,
     required this.x,
     required this.y,
     required this.z,
     required this.showOnSearch,
     required this.neighbors,
   }) : building = id.split('_')[0],
-       floor = int.tryParse(_safeGet(id.split('_'), 1) ?? ''),
-       type = _safeGet(id.split('_'), 2);
+       floor = int.tryParse(_safeGet(id.split('_'), 1) ?? '');
 
   (double, double, double) getPos() {
     return (x, y, z);
@@ -37,7 +37,7 @@ class Node {
     return null;
   }
 
-  void addNeighbor(neighbor, cost, type) {
+  void addNeighbor(Node neighbor, double cost, String type) {
     neighbors.add((neighbor, cost, type));
   }
 }

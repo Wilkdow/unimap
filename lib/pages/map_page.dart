@@ -1,3 +1,7 @@
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:unimap/models/node_model.dart';
 import 'package:unimap/services/load_graph.dart' as load;
@@ -12,18 +16,30 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final String csvPath = "assets/CSVs/andes_buildings.csv";
-  final String mapPngPath = 'assets/Map/unimap.png';
+  final String mapPngPath = 'assets/map/unimap.png';
+  final offsetIcon = Offset(12.5, 24);
+  final (double, double, double) initPosCam = (-2100, -820, 0);
+  final double scale = 0.55;
 
   final TransformationController _transformationController =
       TransformationController();
 
   final List<Offset> markers = [];
   final List<Offset> pathLineCoords = [];
-  final offsetIcon = Offset(14, 27);
   final List<String> suggestions = [];
+  ValueNotifier<Map<String, int>> preferences = ValueNotifier({
+    'stair': 0,
+    'elevator': 0,
+  });
+  final Map<String, int> preferencesBackup = {'stair': 0, 'elevator': 0};
+  List<Color> preferencesColors = [
+    Colors.greenAccent,
+    Colors.amberAccent,
+    Colors.redAccent,
+  ];
 
   Map<String, Node> graph = {};
-  late List<Node> shortestPath;
+  List<Node> shortestPath = [];
   Node? start;
   Node? end;
 
@@ -33,12 +49,44 @@ class _MapPageState extends State<MapPage> {
     _loadGraph(csvPath);
     //Set the initial pos to somewhere on the image
     _transformationController.value =
-        Matrix4.identity()..setTranslationRaw(-1200, -430, 0); //"center" map
+        Matrix4.identity()
+          ..scale(scale)
+          ..setTranslationRaw(
+            initPosCam.$1 * scale,
+            initPosCam.$2 * scale,
+            initPosCam.$3 * scale,
+          ); //"center" map
   }
 
   Future<void> _loadGraph(String path) async {
     graph = load.loadData(await load.readCsvAsync(path));
     _loadSuggestions(graph);
+    setState(() {});
+  }
+
+  void _changePreference(String preference) {
+    preferences.value[preference] = (preferences.value[preference]! + 1) % 3;
+    preferences.notifyListeners();
+    setState(() {});
+  }
+
+  void _changeAllPreferences(int T) {
+    for (var preference in preferences.value.keys) {
+      preferences.value[preference] = T;
+    }
+    preferences.notifyListeners();
+    setState(() {});
+  }
+
+  void _restorePreference(String pref) {
+    preferences.value[pref] = preferencesBackup[pref]!;
+    preferences.notifyListeners();
+    setState(() {});
+  }
+
+  void _restoreAllPreferences() {
+    preferences.value = preferencesBackup;
+    preferences.notifyListeners();
     setState(() {});
   }
 
@@ -51,13 +99,48 @@ class _MapPageState extends State<MapPage> {
     setState(() {});
   }
 
+  Map<String, Offset?> _getFirstAndLastCoord(List<Offset> pathLineCoords) {
+    Map<String, Offset?> coords = {'min': null, 'max':null};
+    for (Offset coord in pathLineCoords) {
+      if (coords['min'] != null) {
+        if (coords['min']!.dx > coord.dx) {
+          coords['min'] = Offset(coord.dx, coords['min']!.dy);
+        }
+        if (coords['min']!.dy > coord.dy) {
+          coords['min'] = Offset(coords['min']!.dx, coord.dy);
+        }
+      }
+      else {
+        coords['min'] = coord;
+      }
+
+      if (coords['max'] != null) {
+        if (coords['max']!.dx < coord.dx) {
+          coords['max'] = Offset(coord.dx, coords['max']!.dy);
+        }
+        if (coords['max']!.dy < coord.dy) {
+          coords['max'] = Offset(coords['max']!.dx, coord.dy);
+        }
+      }
+      else {
+        coords['max'] = coord;
+      }
+    }
+
+    coords['min'] = coords['min']! - Offset(50, 150);
+    coords['max'] = coords['max']! + Offset(50, 100);
+
+    return coords;
+  }
+
   void _calculateShortestPath(Map graph, Node start, Node end) {
-    shortestPath = astar.algorithm(graph, start, end);
+    shortestPath = astar.algorithm(graph, start, end, preferences.value);
     setState(() {});
   }
 
   void _setMarkers(Node start, Node end) {
     markers.addAll([start.getOffset(), end.getOffset()]);
+    setState(() {});
   }
 
   void _setPathLinesCoords(List<Node> path) {
@@ -67,6 +150,7 @@ class _MapPageState extends State<MapPage> {
     setState(() {});
   }
 
+  // ignore: unused_element
   void _handleTap(BuildContext context, TapUpDetails details) {
     //Convert global tap position to local within the InteractiveViewer
     final renderBox = context.findRenderObject() as RenderBox;
@@ -79,21 +163,46 @@ class _MapPageState extends State<MapPage> {
       localPosition,
     );
 
-    setState(() {
-      pathLineCoords.add(transformedPos);
-    });
+    print(localPosition);
+    print(transformedPos);
   }
 
-  void _handleAlgortihm() {
-    print(start);
-    print(end);
-    print(graph);
-    _calculateShortestPath(graph, start!, end!);
-    _setPathLinesCoords(shortestPath);
-    print('Path');
-    for (var node in shortestPath) {
-      print(node.id);
+  void _handleAlgortihm(Size screenSize) {
+    if (shortestPath.isEmpty) {
+      _calculateShortestPath(graph, start!, end!);
+      if (shortestPath.isNotEmpty) {
+        _setPathLinesCoords(shortestPath);
+        _setMarkers(start!, end!);
+        
+        var minAndMax = _getFirstAndLastCoord(pathLineCoords);
+        double distanceNodesX = (minAndMax['min']!.dx - minAndMax['max']!.dx).abs();
+        double distanceNodesY = (minAndMax['min']!.dy - minAndMax['max']!.dy).abs();
+        double scale = min((screenSize.width - 5)/distanceNodesX, (screenSize.height - 165)/distanceNodesY);
+
+        print(minAndMax);
+        print(distanceNodesX);
+        print(distanceNodesY);
+        print(scale);
+        _transformationController.value =
+          Matrix4.identity()
+            ..setTranslationRaw(
+              -(minAndMax['min']!.dx - 2.5) * scale,
+              -(minAndMax['min']!.dy - 165) * scale,
+              initPosCam.$3,
+            )
+            ..scale((scale));
+      } else {
+        _showTooltip(
+          context,
+          'No se encontró un camino para llegar a tu destino, revisa tus filtros/preferencias',
+        );
+      }
     }
+  }
+
+  void _showTooltip(BuildContext context, String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   void _resetEverything() {
@@ -105,111 +214,255 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
-      body: Stack(children: [_mapVisualizer(), _searchField()]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _handleAlgortihm();
-        },
-      ),
+      body: Stack(children: [_mapVisualizer(), _searchField(screenSize)]),
+      floatingActionButton: _filterButton(),
     );
   }
 
-  Padding _searchField() {
+  FloatingActionButton _filterButton() {
+    double fontSize1 = 15;
+
+    return FloatingActionButton(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog.adaptive(
+              title: Text(
+                '¿Qué tipo caminos te gustaría evitar?',
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      spacing: 5,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Puedo',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                          ),
+                        ),
+                        Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: preferencesColors[0],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            'Prefiero no',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: fontSize1 - 2,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                          ),
+                        ),
+                        Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: preferencesColors[1],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            'No puedo',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                          ),
+                        ),
+                        Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: preferencesColors[2],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _askPreferencesButtons('Escaleras', 'stair'),
+                  _askPreferencesButtons('Elevadores', 'elevator'),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Padding _askPreferencesButtons(String prefTitle, String pref) {
     return Padding(
-      padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
-      child: Column(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _autocompleteField(true),
-          _autocompleteField(false),
+          Text('$prefTitle: '),
+          SizedBox(width: 20),
+          GestureDetector(
+            onTap: () => _changePreference(pref),
+            onLongPress: () => _restorePreference(pref),
+            child: ValueListenableBuilder(
+              valueListenable: preferences,
+              builder: (context, value, child) {
+                return Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                    color: _returnColorPreference(value[pref]!),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Autocomplete<String> _autocompleteField(bool isOrigin) {
+  Color _returnColorPreference(int i) {
+    late Color color;
+    if (i == 0) {
+      color = preferencesColors[0];
+    } else if (i == 1) {
+      color = preferencesColors[1];
+    } else {
+      color = preferencesColors[2];
+    }
+    return color;
+  }
+
+  Padding _searchField(Size screenSize) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+      child: Column(
+        children: [_autocompleteField(true, screenSize), _autocompleteField(false, screenSize)],
+      ),
+    );
+  }
+
+  Autocomplete<String> _autocompleteField(bool isOrigin, Size screenSize) {
     return Autocomplete<String>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable.empty();
-            }
-            return suggestions.where((String option) {
-              return option.toLowerCase().contains(
-                textEditingValue.text.toLowerCase(),
-              );
-            });
-          },
-          onSelected: (option) {
-            setState(() {
-              isOrigin ? start = graph[option] :  end = graph[option];
-            });
-          },
-          fieldViewBuilder: (
-            context,
-            textEditingController,
-            focusNode,
-            onFieldSubmitted,
-          ) {
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: isOrigin ? 'Origen...' : 'Destino...',
-                prefixIcon: Icon(Icons.search_rounded),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.vertical(
-                    top: isOrigin ? Radius.circular(18) : Radius.zero,
-                    bottom: isOrigin ? Radius.zero : Radius.circular(18)
-                  ),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.white,
+      optionsBuilder: (TextEditingValue textEditingValue) {
+        if (textEditingValue.text.isEmpty) {
+          return const Iterable.empty();
+        }
+        return suggestions.where((String option) {
+          return option.toLowerCase().contains(
+            textEditingValue.text.toLowerCase(),
+          );
+        });
+      },
+      onSelected: (option) {
+        setState(() {
+          isOrigin ? start = graph[option] : end = graph[option];
+        });
+        if (start != null && end != null) {
+          _handleAlgortihm(screenSize);
+        }
+      },
+      fieldViewBuilder: (
+        context,
+        textEditingController,
+        focusNode,
+        onFieldSubmitted,
+      ) {
+        return TextField(
+          controller: textEditingController,
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            hintText: isOrigin ? 'Origen...' : 'Destino...',
+            prefixIcon: Icon(Icons.search_rounded),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.vertical(
+                top: isOrigin ? Radius.circular(18) : Radius.zero,
+                bottom: isOrigin ? Radius.zero : Radius.circular(18),
               ),
-              onChanged: (value) {
-                _resetEverything();
-                if (suggestions.contains(value)) {
-                  setState(() {
-                    isOrigin ? start = graph[value] :  end = graph[value];
-                  });
-                }
-                else {
-                  setState(() {
-                    isOrigin ? start = null :  end = null;
-                  });
-                }
-              },
-            );
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          onChanged: (value) {
+            _resetEverything();
+            if (suggestions.contains(value)) {
+              setState(() {
+                isOrigin ? start = graph[value] : end = graph[value];
+              });
+            } else {
+              setState(() {
+                isOrigin ? start = null : end = null;
+              });
+            }
+            if (start != null && end != null) {
+              _handleAlgortihm(screenSize);
+            }
           },
         );
+      },
+    );
   }
 
   Expanded _mapVisualizer() {
     return Expanded(
       child: GestureDetector(
         onTapUp: (details) {
-          // _handleTap(context, details);
-          _resetEverything();
+          _handleTap(context, details);
         },
         child: InteractiveViewer(
           transformationController: _transformationController,
           boundaryMargin: EdgeInsets.all(8.0),
           constrained: false,
+          minScale: 0.3,
+          maxScale: 1.5,
           child: Stack(
             children: [
-              SizedBox(
-                height: 1500,
-                child: Image.asset(mapPngPath, fit: BoxFit.cover),
-              ),
+              Image.asset(mapPngPath, fit: BoxFit.cover),
               CustomPaint(painter: LinePainter(waypoints: pathLineCoords)),
               //Add markers and stuff
-              ...markers.map(
-                (offSet) => Positioned(
-                  left: offSet.dx - offsetIcon.dx,
-                  top: offSet.dy - offsetIcon.dy,
-                  child: Icon(Icons.location_on, color: Colors.red, size: 30),
-                ),
-              ),
+              ...markers.asMap().entries.map((entry) {
+                int index = entry.key;
+                Offset offset = entry.value - offsetIcon;
+
+                IconData icon = Icons.location_on;
+                if (index == markers.length - 1) {
+                  icon = Icons.sports_score;
+                }
+
+                return Positioned(
+                  left: offset.dx,
+                  top: offset.dy,
+                  child: Icon(icon, color: Colors.red),
+                );
+              }),
             ],
           ),
         ),

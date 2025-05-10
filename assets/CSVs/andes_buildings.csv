@@ -1,8 +1,8 @@
 name,x,y,z,neighbors,type,isSearchable
-AU_1,1177.8,827.8,1,RGD_1,bridge,si
-RGD_1,1245.1,834,2,AU_1 LL_1 W_3 B_5 C_4,bridge ramp ramp ramp ramp,
-ML_4,1388.4,640.5,3,W_3,ramp,si
-W_3,1425.1,778.4,4,ML_4 RGD_1 LL_1 C_4 B_5,ramp ramp ramp ramp ramp,
-LL_1,1404,842.4,5,W_3 B_5 C_4 RGD_1,ramp ramp ramp ramp,
-C_4,1490.2,942.4,2,B_5 LL_1 W_3,ramp ramp ramp,si
-B_5,1388,961.3,1,C_4 LL_1 W_3,ramp ramp ramp,si
+AU_1,1177.8,827.8,1,RGD_1,stair,si
+RGD_1,1245.1,834,2,AU_1 LL_1 W_3 B_5 C_4,elevator,
+ML_4,1388.4,640.5,3,W_3,elevator,si
+W_3,1425.1,778.4,4,ML_4 RGD_1 LL_1 C_4 B_5,stair,
+LL_1,1404,842.4,5,W_3 B_5 C_4 RGD_1,elevator,
+C_4,1490.2,942.4,2,B_5 LL_1 W_3,stair,si
+B_5,1388,961.3,1,C_4 LL_1 W_3,elevator,si

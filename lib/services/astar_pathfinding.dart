@@ -19,7 +19,7 @@ List<Node> reconstructPath(Map cameFrom, current) {
   return path.reversed.toList();
 }
 
-List<Node> algorithm(Map graph, start, end) {
+List<Node> algorithm(Map graph, Node start, Node end, Map<String, int> preferences) {
   List<Node> path = [];
   final pq = PriorityQueue<(double, Node)>((a, b) => a.$1.compareTo(b.$1));
   pq.add((0, start));
@@ -41,6 +41,15 @@ List<Node> algorithm(Map graph, start, end) {
     if (current != end) {
       // ignore: unused_local_variable
       for (var (neighbor, cost, type) in current.neighbors) {
+        if(preferences.containsKey(type)) {
+          if (preferences[type] == 1) {
+            cost = cost * 10;
+          }
+          else if (preferences[type] == 2) {
+            continue;
+          }
+        }
+
         double tempGScore = gScore[current.id] + cost;
 
         if (tempGScore < gScore[neighbor.id]) {
