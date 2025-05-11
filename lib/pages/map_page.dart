@@ -15,8 +15,8 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  final String csvPath = "assets/CSVs/andes_buildings.csv";
-  final String mapPngPath = 'assets/map/unimap.png';
+  final String csvPath = "assets/CSVs/andes_buildings1.csv";
+  final String mapPngPath = 'assets/Map/unimap.png';
   final offsetIcon = Offset(12.5, 24);
   final (double, double, double) initPosCam = (-2100, -820, 0);
   final double scale = 0.55;
@@ -42,6 +42,8 @@ class _MapPageState extends State<MapPage> {
     Colors.amberAccent,
     Colors.redAccent,
   ];
+
+  List debugMarkers = [];
 
   Map<String, Node> graph = {};
   List<Node> shortestPath = [];
@@ -167,8 +169,9 @@ class _MapPageState extends State<MapPage> {
       localPosition,
     );
 
-    print(localPosition);
-    print(transformedPos);
+    debugMarkers.add(transformedPos);
+    print(debugMarkers);
+    setState(() {});
   }
 
   void _handleAlgortihm(Size screenSize) {
@@ -186,8 +189,8 @@ class _MapPageState extends State<MapPage> {
         double scale = min(scaleX, scaleY);
 
         final (double, double) translationMiddle = (
-          (coords['middle']!.dx - 2.5 - screenSize.width/2) * scale,
-          (coords['middle']!.dy - 165 - screenSize.height/2) * scale,
+          (coords['middle']!.dx - 2.5 - screenSize.width / 2) * scale,
+          (coords['middle']!.dy - 165 - screenSize.height / 2) * scale,
         );
 
         final (double, double) translationMin = (
@@ -199,7 +202,7 @@ class _MapPageState extends State<MapPage> {
             scaleX < scaleY ? translationMin.$1 : -translationMiddle.$1;
         final translationY =
             scaleX > scaleY ? translationMin.$2 : -translationMiddle.$2;
-            
+
         _transformationController.value =
             Matrix4.identity()
               ..setTranslationRaw(translationX, translationY, 0)
@@ -231,7 +234,11 @@ class _MapPageState extends State<MapPage> {
 
     return Scaffold(
       body: Stack(children: [_mapVisualizer(), _searchField(screenSize)]),
-      floatingActionButton: _filterButton(),
+      floatingActionButton: FloatingActionButton(onPressed: () {
+        setState(() {
+          debugMarkers.removeLast();
+        });
+      }),
     );
   }
 
@@ -484,6 +491,15 @@ class _MapPageState extends State<MapPage> {
                   left: offset.dx,
                   top: offset.dy,
                   child: Icon(icon, color: Colors.red),
+                );
+              }),
+
+              ...debugMarkers.map((marker) {
+                Offset offset = marker - offsetIcon;
+                return Positioned(
+                  left: offset.dx,
+                  top: offset.dy,
+                  child: Icon(Icons.location_on, color: Colors.amber),
                 );
               }),
             ],
