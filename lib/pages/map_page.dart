@@ -16,7 +16,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final String csvPath = "assets/CSVs/andes_buildings.csv";
-  final String mapPngPath = 'assets/Map/unimap.png';
+  final String mapPngPath = 'assets/map/unimap.png';
   final offsetIcon = Offset(12.5, 24);
   final (double, double, double) initPosCam = (-2100, -820, 0);
   final double scale = 0.55;
