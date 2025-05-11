@@ -12,6 +12,7 @@ Map<String, Node> loadData(List<List<String>> csvData) {
   for (int i = 1; i < csvData.length; i++) {
     final data = csvData[i];
     Node node = Node(
+      searchName: data[6].isNotEmpty ? data[6] : null,
       id: data[0],
       type: data[5],
       x: double.parse(data[1]) * 1.81,

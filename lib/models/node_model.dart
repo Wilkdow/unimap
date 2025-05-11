@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Node {
+  final String? searchName;
   final String id;
   final String building;
   final String type;
@@ -12,6 +13,7 @@ class Node {
   final List<(Node, double, String)> neighbors;
 
   Node({
+    required this.searchName,
     required this.id,
     required this.type,
     required this.x,

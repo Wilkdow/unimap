@@ -16,7 +16,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final String csvPath = "assets/CSVs/andes_buildings.csv";
-  final String mapPngPath = 'assets/map/unimap.png';
+  final String mapPngPath = 'assets/Map/unimap.png';
   final offsetIcon = Offset(12.5, 24);
   final (double, double, double) initPosCam = (-2100, -820, 0);
   final double scale = 0.55;
@@ -26,12 +26,17 @@ class _MapPageState extends State<MapPage> {
 
   final List<Offset> markers = [];
   final List<Offset> pathLineCoords = [];
-  final List<String> suggestions = [];
+  final Map<String, String> suggestions = {};
   ValueNotifier<Map<String, int>> preferences = ValueNotifier({
-    'stair': 0,
+    'stairs': 0,
     'elevator': 0,
+    'electricstairs': 0,
   });
-  final Map<String, int> preferencesBackup = {'stair': 0, 'elevator': 0};
+  final Map<String, int> preferencesBackup = {
+    'stairs': 0,
+    'elevator': 0,
+    'electricstairs': 0,
+  };
   List<Color> preferencesColors = [
     Colors.greenAccent,
     Colors.amberAccent,
@@ -93,14 +98,14 @@ class _MapPageState extends State<MapPage> {
   void _loadSuggestions(Map<String, Node> graph) {
     for (Node node in graph.values) {
       if (node.showOnSearch) {
-        suggestions.add(node.id);
+        suggestions[node.searchName!] = node.id;
       }
     }
     setState(() {});
   }
 
-  Map<String, Offset?> _getFirstAndLastCoord(List<Offset> pathLineCoords) {
-    Map<String, Offset?> coords = {'min': null, 'max':null};
+  Map<String, Offset?> _getCoords(List<Offset> pathLineCoords) {
+    Map<String, Offset?> coords = {'min': null, 'middle': null, 'max': null};
     for (Offset coord in pathLineCoords) {
       if (coords['min'] != null) {
         if (coords['min']!.dx > coord.dx) {
@@ -109,8 +114,7 @@ class _MapPageState extends State<MapPage> {
         if (coords['min']!.dy > coord.dy) {
           coords['min'] = Offset(coords['min']!.dx, coord.dy);
         }
-      }
-      else {
+      } else {
         coords['min'] = coord;
       }
 
@@ -121,11 +125,11 @@ class _MapPageState extends State<MapPage> {
         if (coords['max']!.dy < coord.dy) {
           coords['max'] = Offset(coords['max']!.dx, coord.dy);
         }
-      }
-      else {
+      } else {
         coords['max'] = coord;
       }
     }
+    coords['middle'] = (coords['min']! + coords['max']!) / 2;
 
     coords['min'] = coords['min']! - Offset(50, 150);
     coords['max'] = coords['max']! + Offset(50, 100);
@@ -173,24 +177,33 @@ class _MapPageState extends State<MapPage> {
       if (shortestPath.isNotEmpty) {
         _setPathLinesCoords(shortestPath);
         _setMarkers(start!, end!);
-        
-        var minAndMax = _getFirstAndLastCoord(pathLineCoords);
-        double distanceNodesX = (minAndMax['min']!.dx - minAndMax['max']!.dx).abs();
-        double distanceNodesY = (minAndMax['min']!.dy - minAndMax['max']!.dy).abs();
-        double scale = min((screenSize.width - 5)/distanceNodesX, (screenSize.height - 165)/distanceNodesY);
 
-        print(minAndMax);
-        print(distanceNodesX);
-        print(distanceNodesY);
-        print(scale);
+        var coords = _getCoords(pathLineCoords);
+        double distanceNodesX = (coords['min']!.dx - coords['max']!.dx).abs();
+        double distanceNodesY = (coords['min']!.dy - coords['max']!.dy).abs();
+        double scaleX = (screenSize.width - 5) / distanceNodesX;
+        double scaleY = (screenSize.height - 165) / distanceNodesY;
+        double scale = min(scaleX, scaleY);
+
+        final (double, double) translationMiddle = (
+          (coords['middle']!.dx - 2.5 - screenSize.width/2) * scale,
+          (coords['middle']!.dy - 165 - screenSize.height/2) * scale,
+        );
+
+        final (double, double) translationMin = (
+          -(coords['min']!.dx - 2.5) * scale,
+          -(coords['min']!.dy - 165) * scale,
+        );
+
+        final translationX =
+            scaleX < scaleY ? translationMin.$1 : -translationMiddle.$1;
+        final translationY =
+            scaleX > scaleY ? translationMin.$2 : -translationMiddle.$2;
+            
         _transformationController.value =
-          Matrix4.identity()
-            ..setTranslationRaw(
-              -(minAndMax['min']!.dx - 2.5) * scale,
-              -(minAndMax['min']!.dy - 165) * scale,
-              initPosCam.$3,
-            )
-            ..scale((scale));
+            Matrix4.identity()
+              ..setTranslationRaw(translationX, translationY, 0)
+              ..scale((scale));
       } else {
         _showTooltip(
           context,
@@ -307,7 +320,11 @@ class _MapPageState extends State<MapPage> {
                       ],
                     ),
                   ),
-                  _askPreferencesButtons('Escaleras', 'stair'),
+                  _askPreferencesButtons('Escaleras', 'stairs'),
+                  _askPreferencesButtons(
+                    'Escaleras electricas',
+                    'electricstairs',
+                  ),
                   _askPreferencesButtons('Elevadores', 'elevator'),
                 ],
               ),
@@ -322,10 +339,9 @@ class _MapPageState extends State<MapPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('$prefTitle: '),
-          SizedBox(width: 20),
           GestureDetector(
             onTap: () => _changePreference(pref),
             onLongPress: () => _restorePreference(pref),
@@ -364,7 +380,10 @@ class _MapPageState extends State<MapPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
       child: Column(
-        children: [_autocompleteField(true, screenSize), _autocompleteField(false, screenSize)],
+        children: [
+          _autocompleteField(true, screenSize),
+          _autocompleteField(false, screenSize),
+        ],
       ),
     );
   }
@@ -375,7 +394,7 @@ class _MapPageState extends State<MapPage> {
         if (textEditingValue.text.isEmpty) {
           return const Iterable.empty();
         }
-        return suggestions.where((String option) {
+        return suggestions.keys.where((String option) {
           return option.toLowerCase().contains(
             textEditingValue.text.toLowerCase(),
           );
@@ -383,7 +402,9 @@ class _MapPageState extends State<MapPage> {
       },
       onSelected: (option) {
         setState(() {
-          isOrigin ? start = graph[option] : end = graph[option];
+          isOrigin
+              ? start = graph[suggestions[option]]
+              : end = graph[suggestions[option]];
         });
         if (start != null && end != null) {
           _handleAlgortihm(screenSize);
@@ -413,9 +434,11 @@ class _MapPageState extends State<MapPage> {
           ),
           onChanged: (value) {
             _resetEverything();
-            if (suggestions.contains(value)) {
+            if (suggestions.keys.contains(value)) {
               setState(() {
-                isOrigin ? start = graph[value] : end = graph[value];
+                isOrigin
+                    ? start = graph[suggestions[value]]
+                    : end = graph[suggestions[value]];
               });
             } else {
               setState(() {
