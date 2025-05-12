@@ -74,7 +74,7 @@ class _CalculatorDefinitivaState extends State<CalculatorDefinitivaPage> {
         backgroundColor: Color.fromARGB(255, 45, 40, 40),
         iconTheme: IconThemeData(color: Colors.white),
         title: Text(
-          "Calculadora de Nota Final",
+          "Número de notas en el semestre",
           style: TextStyle(color: Colors.white, fontSize: 23),
         ),
       ),
@@ -85,8 +85,10 @@ class _CalculatorDefinitivaState extends State<CalculatorDefinitivaPage> {
             TextField(
               controller: cantidadController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Calculadora de Nota Final",
-          labelStyle: TextStyle(color: Colors.white, )),
+              decoration: InputDecoration(
+                labelText: "Número de notas en el semestre",
+                labelStyle: TextStyle(color: Colors.white),
+              ),
               onChanged: (_) => generarInputs(),
             ),
             SizedBox(height: 16),
@@ -105,7 +107,8 @@ class _CalculatorDefinitivaState extends State<CalculatorDefinitivaPage> {
                     child: TextField(
                       controller: porcentajeControllers[i],
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: '% ${i + 1}'),
+                      decoration: InputDecoration(
+                          labelText: '% que representa en el semestre'),
                     ),
                   ),
                 ],

@@ -202,7 +202,7 @@ class _MapPageState extends State<MapPage> {
             
         _transformationController.value =
             Matrix4.identity()
-              ..setTranslationRaw(translationX, translationY, 0)
+              ..setTranslationRaw(translationMin.$1, translationMin.$2, 0)
               ..scale((scale));
       } else {
         _showTooltip(

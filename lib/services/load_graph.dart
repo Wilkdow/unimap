@@ -15,9 +15,9 @@ Map<String, Node> loadData(List<List<String>> csvData) {
       searchName: data[6].isNotEmpty ? data[6] : null,
       id: data[0],
       type: data[5],
-      x: double.parse(data[1]) * 1.81,
-      y: double.parse(data[2]) * 1.81,
-      z: double.parse(data[3]) * 1.81,
+      x: double.parse(data[1]),
+      y: double.parse(data[2]),
+      z: double.parse(data[3]),
       showOnSearch: data[6].isNotEmpty,
       neighbors: [],
     );

@@ -1,8 +1,12 @@
 name,x,y,z,neighbors,type,isSearchable
-AU_1,1177.8,827.8,1,RGD_1,stair,Piso 1 Aulas
-RGD_1,1245.1,834,2,AU_1 LL_1 W_3 B_5 C_4,elevator,
-ML_4,1388.4,640.5,3,W_3,elevator,Piso 4 ML
-W_3,1425.1,778.4,4,ML_4 RGD_1 LL_1 C_4 B_5,stair,
-LL_1,1404,842.4,5,W_3 B_5 C_4 RGD_1,elevator,
-C_4,1490.2,942.4,2,B_5 LL_1 W_3,stair,Piso 4 C
-B_5,1388,961.3,1,C_4 LL_1 W_3,elevator,Piso 5 B
+AU,2131.818,1498.318,1,RGD SD,stair,Aulas
+RGD,2253.631,1509.54,2,AU LL W B SD,elevator,RGD
+ML,2513.004,1159.305,3,W SD,elevator,ML
+W,2579.431,1408.904,4,ML RGD LL C B,stair,W
+LL,2541.24,1524.744,5,W B C RGD,elevator,Lleras
+C,2697.262,1705.744,2,B LL W O N,stair,C
+B,2512.28,1739.953,1,C LL W,elevator,B
+SD,1846.5,891.5,1,ML RGD AU,,Santo Domingo
+O,2894.4,1794.8,1,C Q,bridge,Edificio O
+Q,2915.6,1999.0,1,O N,,Edificio Q
+N,2806.0,1853.6,1,O Q C,,Edificio N
